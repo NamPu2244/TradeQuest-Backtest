@@ -65,7 +65,7 @@ def import_local(source: Path, destination: Path):
                 columns = [c[1] for c in out.execute(f'PRAGMA table_info("{table}")')]
                 names = ','.join('"' + c + '"' for c in columns)
                 marks = ','.join('?' for _ in columns)
-                out.executemany(f'INSERT INTO "{table}" ({names}) VALUES ({marks})', [tuple(r[c] for c in columns) for r in rows])
+                out.executemany(f'INSERT INTO "{table}" ({names}) VALUES ({marks})', [tuple(r[c] if c in r.keys() else 'local' if c == 'owner_id' else None for c in columns) for r in rows])
             out.commit()
             if out.execute('PRAGMA integrity_check').fetchone()[0] != 'ok':
                 raise ValueError('Imported database integrity check failed')

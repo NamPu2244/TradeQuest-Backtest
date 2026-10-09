@@ -2,7 +2,7 @@
 name = "tradequest-backtest-api"
 version = "0.1.0"
 requires-python = ">=3.11"
-dependencies = ["fastapi>=0.115,<1", "uvicorn>=0.30,<1", "sqlalchemy>=2.0,<3", "pydantic>=2.9,<3", "python-multipart>=0.0.18"]
+dependencies = ["fastapi>=0.115,<1", "uvicorn>=0.30,<1", "sqlalchemy>=2.0,<3", "pydantic>=2.9,<3", "python-multipart>=0.0.18", "httpx>=0.27,<1", "PyJWT[crypto]>=2.10,<3", "psycopg[binary]>=3.2,<4", "boto3>=1.35,<2"]
 [project.optional-dependencies]
 dev = ["pytest>=8,<10", "httpx>=0.27,<1"]
 [tool.pytest.ini_options]

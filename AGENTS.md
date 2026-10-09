@@ -1,6 +1,6 @@
 # Standalone Backtest scope
 
-This repository owns only a local manual trading simulator. Keep Journal, MT5 bridge, broker execution and the shared study repository outside this application.
+This repository owns a manual trading simulator with independent local storage and per-user cloud storage. Keep Journal, MT5 bridge, broker execution and the shared study repository outside this application.
 
 - Preserve frozen decisions, indicator versions, drawing coordinates, trade accounting and imported historical evidence.
 - User-requested changes to simulator UX must not add broker order paths.

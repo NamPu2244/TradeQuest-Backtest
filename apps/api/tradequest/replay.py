@@ -61,7 +61,7 @@ def demo_bars():
 
 
 def dataset_dict(d):
-    return {"id":d.id,"name":d.name,"symbol":d.symbol,"timeframe":d.timeframe,"source":d.source,"synthetic":d.synthetic,**d.metadata_json}
+    return {"id":d.id,"name":d.name,"symbol":d.symbol,"timeframe":d.timeframe,"source":d.source,"synthetic":d.synthetic,**{k:v for k,v in d.metadata_json.items() if k!='cloud_ticks'}}
 
 
 

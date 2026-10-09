@@ -5,4 +5,5 @@ cd "$(dirname "$0")/.."
 pnpm --dir apps/web typecheck
 pnpm --dir apps/web lint
 pnpm --dir apps/web test:e2e
+pnpm --dir apps/web test:cloud-ui
 python3 scripts/audit_read_only.py

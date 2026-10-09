@@ -5053,3 +5053,17 @@ body { background:#151e22; }
 @media(max-width:1000px){.backtest-chart-toolbar{flex-wrap:wrap;}.terminal-quote-actions{flex:1;justify-content:flex-end;}.backtest-topbar .backtest-title{max-width:150px;}.terminal-brand span{display:none;}}
 @media(max-width:600px){.backtest-topbar{gap:7px;padding:7px;flex-wrap:wrap;}.terminal-brand{font-size:22px;}.terminal-symbol-tab{padding:0 8px;}.backtest-topbar .backtest-title{display:none;}.terminal-quote-actions{width:100%;justify-content:space-between;}.terminal-quote-actions>strong{margin:0;font-size:11px;}.terminal-buy,.terminal-sell{padding:7px 9px;font-size:11px;}.backtest-chart-canvas .replay-chart{height:440px;}.terminal-positions header{flex-wrap:wrap;gap:5px;padding:0 8px;}.position-tabs{width:100%;}.terminal-position-scroll{height:170px;}.backtest-account{gap:9px;padding:10px;}.backtest-bottom{flex-wrap:wrap;}.exit-toast-stack{right:10px;bottom:14px;width:min(320px,calc(100vw - 20px));}.backtest-workspace.immersive{padding:0;}}
 @media(prefers-reduced-motion:reduce){.terminal-quote-actions button:active{transform:none;}}
+
+/* Cloud login is independent of the chart workspace and never overlays replay. */
+.cloud-login {min-height:100dvh;display:grid;place-items:center;padding:24px;background:#10171b}
+.cloud-login>section {width:min(100%,420px);padding:36px;border:1px solid #2c383e;border-radius:22px;background:#172025;box-shadow:0 18px 70px #0005}
+.cloud-brand {font-size:13px;letter-spacing:.18em;color:#d6b86c}
+.cloud-login h1 {font-size:30px;margin:12px 0}.cloud-login p,.cloud-login small {color:#a9b5bb}
+.cloud-login-form {display:grid;gap:18px;margin:28px 0}.cloud-login-form label {display:grid;gap:8px;font-size:14px}
+.cloud-login-form input {min-width:0;width:100%;padding:12px 14px;border:1px solid #38454b;border-radius:10px;background:#0f171c;color:#eef2f4}
+.cloud-login-form button {padding:12px;border-radius:10px;background:#2962ff;color:white;cursor:pointer}.cloud-login-form button:disabled {opacity:.6}
+.cloud-login-form [role=alert] {color:#ff7979;font-size:14px}
+.cloud-account {display:flex;align-items:center;justify-content:flex-end;gap:14px;padding:6px 16px;background:#111a1f;font-size:12px;color:#a9b5bb}
+.cloud-account button {padding:5px 9px;border:1px solid #38454b;border-radius:6px;cursor:pointer}
+
+.cloud-login-form button {display:flex;align-items:center;justify-content:center;gap:10px}

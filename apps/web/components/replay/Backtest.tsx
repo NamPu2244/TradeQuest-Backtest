@@ -6,7 +6,11 @@ import { ChartLoading } from "../MotionUI";
 import type { Dataset, Session, SessionSummary } from "./types";
 import BacktestWorkspace from "./BacktestWorkspace";
 import { timeLabel } from "./backtest-utils";
-export default function Backtest() {
+export default function Backtest({
+  cloudMode = false,
+}: {
+  cloudMode?: boolean;
+}) {
   const [datasets, setDatasets] = useState<Dataset[]>([]),
     [profiles, setProfiles] = useState<SessionSummary[]>([]);
   const [session, setSession] = useState<Session | null>(null),
@@ -379,6 +383,10 @@ export default function Backtest() {
           onSubmit={(e) => {
             e.preventDefault();
             if (!file) return;
+            if (file.size > (cloudMode ? 4 : 8) * 1024 * 1024) {
+              setError(`CSV ใหญ่เกิน ${cloudMode ? 4 : 8} MB`);
+              return;
+            }
             void work(async () => {
               const body = new FormData();
               body.set("file", file);
@@ -444,7 +452,7 @@ export default function Backtest() {
           </label>
           <small>
             time,open,high,low,close,volume หรือ Export Bars จาก MT5 · 30–50,000
-            แท่งปิด · ไม่เกิน 8 MB
+            แท่งปิด · ไม่เกิน {cloudMode ? 4 : 8} MB
           </small>
           <button className="btn ghost small" disabled={busy}>
             นำเข้าข้อมูล Backtest

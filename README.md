@@ -6,7 +6,7 @@ A standalone, local-first manual trading simulator. Create a practice profile, r
 
 ## Start locally
 
-Install Node.js 20.9+ with pnpm 10, Python 3.11+, and [uv](https://docs.astral.sh/uv/). From the repository root:
+Install Node.js 22+ with pnpm 10, Python 3.11+, and [uv](https://docs.astral.sh/uv/). From the repository root:
 
 ```bash
 pnpm install --frozen-lockfile
@@ -19,7 +19,7 @@ Open **http://localhost:3003**. The local API runs on **127.0.0.1:8790**. Stop b
 - Practice database: `data/backtest.sqlite3`; API key: `data/local.key` (server only).
 - `bash scripts/dev.sh --demo` uses a separate demo database.
 - Optional environment variables: `TQ_WEB_PORT`, `TQ_API_PORT`, `TQ_DATA_DIR`.
-- The app is local only. Login, multi-user cloud sync, public hosting and MT5 integration are not included.
+- Vercel + Supabase + private R2 deployment with GitHub Login: [Cloud setup](docs/DEPLOY_VERCEL_TH.md). Local mode stays offline and independent; automatic Local–Cloud sync is not included. MT5 and Journal remain outside this standalone application.
 
 ## Practice flow
 
@@ -55,7 +55,7 @@ The helper snapshots the source database read-only, copies Backtest profiles/res
 ## Development
 
 - `apps/web/`: Next.js terminal, drawing tools, isolated Pine worker.
-- `apps/api/`: FastAPI replay engine and four SQLite tables.
+- `apps/api/`: FastAPI replay engine and four owned SQLite/PostgreSQL tables.
 - `scripts/`: local launcher, market import/download, isolated testing and migration.
 - `docs/`: Pine/drawing/data guides and authored demo screenshots.
 

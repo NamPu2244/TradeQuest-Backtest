@@ -6,12 +6,14 @@ from .db import Base,now
 def uid():return str(uuid.uuid4())
 
 class Setting(Base):
+    owner_id: Mapped[str] = mapped_column(String(36), default='local', server_default='local', index=True)
     __tablename__ = "settings"
     key: Mapped[str] = mapped_column(String(100), primary_key=True)
     value: Mapped[dict] = mapped_column(JSON)
 
 
 class ReplayDataset(Base):
+    owner_id: Mapped[str] = mapped_column(String(36), default='local', server_default='local', index=True)
     __tablename__ = "replay_datasets"
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
     name: Mapped[str] = mapped_column(String(150))
@@ -25,6 +27,7 @@ class ReplayDataset(Base):
 
 
 class ReplaySession(Base):
+    owner_id: Mapped[str] = mapped_column(String(36), default='local', server_default='local', index=True)
     __tablename__ = "replay_sessions"
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
     dataset_id: Mapped[str] = mapped_column(ForeignKey("replay_datasets.id"))
@@ -41,6 +44,7 @@ class ReplaySession(Base):
 
 
 class ReplayTrade(Base):
+    owner_id: Mapped[str] = mapped_column(String(36), default='local', server_default='local', index=True)
     __tablename__ = "replay_trades"
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
     session_id: Mapped[str] = mapped_column(ForeignKey("replay_sessions.id"), index=True)

@@ -9,6 +9,8 @@ import struct
 from contextlib import contextmanager
 from fastapi import HTTPException
 from .db import DATA
+from .auth import CLOUD
+from .market_index import open_index
 
 INTERVALS = {'M1':60,'M5':300,'M15':900,'M30':1800,'H1':3600,'H4':14400,'D1':86400}
 RECORD=struct.Struct('<qdd')
@@ -30,6 +32,10 @@ def folder(dataset):
 
 @contextmanager
 def quotes(dataset):
+    if CLOUD:
+        from .cloud_ticks import RemoteQuotes
+        yield RemoteQuotes(dataset)
+        return
     path=folder(dataset)
     with (path/'ticks.bin').open('rb') as file:
         if file.seek(0,2)!=dataset.metadata_json['tick_count']*RECORD.size:raise HTTPException(409,'ไฟล์ tick มีขนาดเปลี่ยนไป')
@@ -37,12 +43,13 @@ def quotes(dataset):
 
 
 def tick_at(mapped,index):
-    stamp,bid,ask=RECORD.unpack_from(mapped,index*RECORD.size)
+    stamp,bid,ask=mapped.tick(index) if hasattr(mapped,'tick') else RECORD.unpack_from(mapped,index*RECORD.size)
     return {'time_ms':stamp,'bid':bid,'ask':ask}
 
 
 def find_index(mapped,stamp,upper=False):
     """Lower bound; upper=True returns last quote <= stamp, retaining duplicate timestamps."""
+    if hasattr(mapped,'bound_index'):return mapped.bound_index(stamp,upper)
     low=0;high=len(mapped)//RECORD.size
     while low<high:
         mid=(low+high)//2;time=RECORD.unpack_from(mapped,mid*RECORD.size)[0]
@@ -70,15 +77,15 @@ def view(dataset,cursor,timeframe):
     with quotes(dataset) as mapped:
         quote=tick_at(mapped,cursor);seconds=quote['time_ms']//1000
         bucket=seconds//interval*interval;minute=seconds//60*60
-        with sqlite3.connect((folder(dataset)/'bars.sqlite3').as_uri()+'?mode=ro',uri=True) as db:
+        with open_index(dataset) as db:
             # Completed buckets only: full OHLC of the current bucket is never read.
-            rows=db.execute('SELECT time,open,high,low,close,volume FROM frames WHERE tf=? AND time<? ORDER BY time DESC LIMIT ?', (timeframe,bucket,WINDOW-1)).fetchall()
-            bars=[bar_row(r) for r in reversed(rows)]
-            complete=db.execute('SELECT time,open,high,low,close,volume FROM minutes WHERE time>=? AND time<? ORDER BY time',(bucket,minute)).fetchall()
-            first=db.execute('SELECT first_idx FROM minutes WHERE time=?',(minute,)).fetchone()
-            if not first:raise HTTPException(409,'ดัชนี tick ไม่ครบ')
+            rows=db.before(timeframe,bucket,WINDOW-1)
+            bars=[bar_row(r) for r in rows]
+            complete=db.between(bucket,minute)
+            first=db.first(minute)
+            if first is None:raise HTTPException(409,'ดัชนี tick ไม่ครบ')
         partial=None
-        for index in range(first[0],cursor+1):
+        for index in range(first,cursor+1):
             tick=tick_at(mapped,index);price=tick['bid']
             if partial is None:partial={'time':minute,'open':price,'high':price,'low':price,'close':price,'volume':0}
             partial['high']=max(partial['high'],price);partial['low']=min(partial['low'],price);partial['close']=price;partial['volume']+=1
@@ -90,19 +97,18 @@ def seed_cursor(dataset,start_time=None,end_time=None,timeframe='M5',random_star
     with quotes(dataset) as mapped:
         end=dataset.metadata_json['tick_count']-1 if end_time is None else find_index(mapped,end_time*1000,upper=True)
         if start_time is None and random_start:
-            with sqlite3.connect((folder(dataset)/'bars.sqlite3').as_uri()+'?mode=ro',uri=True) as db:
-                count=db.execute('SELECT count(*) FROM frames WHERE tf=? AND last_idx<?',(timeframe,end)).fetchone()[0]
+            with open_index(dataset) as db:
+                count=db.count(timeframe,end)
                 low=249 if count>=520 else 19
                 high=count-21 if count-low>=40 else count-1
                 if high<low:raise HTTPException(422,'ต้องมีอย่างน้อย 20 แท่งก่อนเริ่มและข้อมูลสำหรับฝึกต่อ')
                 offset=low+secrets.randbelow(high-low+1)
-                cursor=db.execute('SELECT last_idx FROM frames WHERE tf=? AND last_idx<? ORDER BY time LIMIT 1 OFFSET ?',(timeframe,end,offset)).fetchone()[0]
+                cursor=db.at(timeframe,offset)[7]
         elif start_time is None:
-            with sqlite3.connect((folder(dataset)/'bars.sqlite3').as_uri()+'?mode=ro',uri=True) as db:
-                row=db.execute('SELECT last_idx FROM frames WHERE tf=? ORDER BY time LIMIT 1 OFFSET 249',(timeframe,)).fetchone()
-                if row is None:row=db.execute('SELECT last_idx FROM frames WHERE tf=? ORDER BY time LIMIT 1 OFFSET 19',(timeframe,)).fetchone()
+            with open_index(dataset) as db:
+                row=db.at(timeframe,249) or db.at(timeframe,19)
             if row is None:raise HTTPException(422,'ข้อมูลก่อนเริ่มต้องมีอย่างน้อย 20 แท่ง')
-            cursor=row[0]
+            cursor=row[7]
         else:cursor=find_index(mapped,start_time*1000,upper=True)
         end=dataset.metadata_json['tick_count']-1 if end_time is None else find_index(mapped,end_time*1000,upper=True)
         if not 0<=cursor<end<dataset.metadata_json['tick_count']:raise HTTPException(422,'เวลาเริ่ม/จบอยู่นอกข้อมูล tick')

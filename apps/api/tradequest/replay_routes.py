@@ -158,7 +158,7 @@ class Reflection(Input):
 
 
 def session(db,id,body=None,active=True):
-    s=db.get(ReplaySession,id)
+    s=db.scalar(select(ReplaySession).where(ReplaySession.id==id).with_for_update().execution_options(populate_existing=True))
     if not s:raise HTTPException(404,'ไม่พบรอบฝึก')
     if body and body.revision!=s.revision:raise HTTPException(409,'รอบฝึกเปลี่ยนแล้ว กรุณาเปิดใหม่ก่อนทำต่อ')
     if active and s.status!='active':raise HTTPException(409,'รอบฝึกจบแล้ว')
@@ -166,8 +166,9 @@ def session(db,id,body=None,active=True):
 
 
 def save(db,s):
-    s.revision+=1;s.updated_at=now();db.commit()
-    return session_dict(db,s)
+    s.revision+=1;s.updated_at=now();db.flush()
+    result=session_dict(db,s)
+    db.commit();return result
 
 
 @router.get('/datasets')
@@ -278,12 +279,12 @@ def rewind(id:str,body:Revision,db=Depends(get_db)):
         s=session(db,id,body,active=False);d=db.get(ReplayDataset,s.dataset_id)
         interval=INTERVALS[s.config_json.get('timeframe',d.timeframe)]
         if tick_store.is_tick(d):
-            import sqlite3
+            from .market_index import open_index
             with tick_store.quotes(d) as mapped:
                 bucket=(tick_store.tick_at(mapped,s.cursor)['time_ms']//1000)//interval*interval
-            with sqlite3.connect((tick_store.folder(d)/'bars.sqlite3').as_uri()+'?mode=ro',uri=True) as index:
-                row=index.execute('SELECT last_idx FROM frames WHERE tf=? AND time<? ORDER BY time DESC LIMIT 1',(s.config_json.get('timeframe',d.timeframe),bucket)).fetchone()
-            target=row[0] if row else 0
+            with open_index(d) as index:
+                rows=index.before(s.config_json.get('timeframe',d.timeframe),bucket,1)
+            target=rows[0][7] if rows else 0
             with tick_store.quotes(d) as mapped:
                 clock=tick_store.tick_at(mapped,target)['time_ms']
         else:
@@ -406,7 +407,7 @@ def reflection(id:str,trade_id:str,body:Reflection,db=Depends(get_db)):
         if not t or t.session_id!=id:raise HTTPException(404,'ไม่พบ Position')
         if t.status!='closed':raise HTTPException(422,'ทบทวนได้หลังปิด Position แล้ว')
         t.review={'in_plan':None,'notes':'','playbook_snapshot':{},**(t.review or {}),**body.model_dump()}
-        db.commit();return session_dict(db,s)
+        db.flush();result=session_dict(db,s);db.commit();return result
 
 
 @router.post('/sessions/{id}/advance')

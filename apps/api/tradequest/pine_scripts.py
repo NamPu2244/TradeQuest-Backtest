@@ -40,8 +40,10 @@ class PineIndicator(BaseModel):
         return self
 
 
-def record(db,id):
-    r=db.get(Setting,PREFIX+id)
+def record(db,id,write=False):
+    query=select(Setting).where(Setting.key==PREFIX+id).execution_options(populate_existing=True)
+    if write:query=query.with_for_update()
+    r=db.scalar(query)
     if not r:raise HTTPException(404,'ไม่พบสคริปต์')
     return r
 
@@ -52,7 +54,7 @@ def catalog(db):
 
 def store(db,body,id=None):
     if id:
-        row=record(db,id); value=deepcopy(row.value)
+        row=record(db,id,write=True); value=deepcopy(row.value)
         if value['archived']:raise HTTPException(409,'สคริปต์นี้อยู่ในคลังที่เก็บแล้ว')
         if body.base_version!=value['latest_version']:raise HTTPException(409,'สคริปต์มีเวอร์ชันใหม่แล้ว เปิดจากคลังอีกครั้ง')
         if len(value['versions'])>=100:raise HTTPException(422,'ครบ 100 เวอร์ชันแล้ว กรุณาบันทึกเป็นสคริปต์ใหม่')
@@ -69,7 +71,7 @@ def store(db,body,id=None):
 
 
 def archive(db,id,base_version):
-    row=record(db,id);value=deepcopy(row.value)
+    row=record(db,id,write=True);value=deepcopy(row.value)
     if base_version!=value['latest_version']:raise HTTPException(409,'สคริปต์มีเวอร์ชันใหม่แล้ว')
     value['archived']=True;row.value=value;db.commit();return value
 
