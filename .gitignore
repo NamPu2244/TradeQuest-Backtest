@@ -1,0 +1,31 @@
+# Local dependencies and generated output
+node_modules/
+.next*/
+next-env.d.ts
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+*.egg-info/
+*.tsbuildinfo
+playwright-report/
+test-results/
+.DS_Store
+
+# Personal runtime data and credentials
+/data/*
+!/data/.gitkeep
+!/data/uploads/
+/data/uploads/*
+!/data/uploads/.gitkeep
+.env*
+!.env.example
+*.key
+*.pem
+*.sqlite*
+*.db
+*.ex5
+*.log
+/docs/evidence/
+/docs/screenshots/*real*.*
+/docs/screenshots/mt5-runtime-connected.png

@@ -1,0 +1,11 @@
+{
+  "name": "tradequest-backtest",
+  "private": true,
+  "scripts": {
+    "dev": "bash scripts/dev.sh",
+    "test": "bash scripts/test.sh",
+    "typecheck": "pnpm --dir apps/web typecheck"
+  },
+  "packageManager": "pnpm@10.33.0",
+  "license": "AGPL-3.0-only"
+}
